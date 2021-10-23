@@ -14,6 +14,7 @@ What if notion blocks had email?
 
 ```sh
 git clone https://github.com/jdan/notion-mailboxes.git
+cd notion-mailboxes
 npm i
 NOTION_SECRET=[your token here] NOTION_PAGE_ID=[your id here] node main.js
 # watch it do its thing
