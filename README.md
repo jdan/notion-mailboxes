@@ -26,3 +26,5 @@ A small frontend exists so you can place a "Process" button in an embed block
 and click it.
 
 Run it locally with `NOTION_SECRET=... NOTION_PAGE=... vercel dev`.
+
+![image](https://user-images.githubusercontent.com/287268/138574393-a50bd1cd-bedb-4a4c-ba9e-94ff53548066.png)
