@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@notionhq/client": "^0.4.4"
+  }
+}
