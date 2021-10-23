@@ -46,6 +46,40 @@ async function getAllChildren(parentId) {
   return res.results;
 }
 
+async function processAllMailboxes() {
+  await Promise.all(
+    mailboxes.map(async ([block, inbox, outbox]) => {
+      const inboxItems = await getAllChildren(inbox.id);
+      if (inboxItems.length) {
+        const item = inboxItems[0];
+        await notion.blocks.delete({
+          block_id: item.id,
+        });
+        await process(block, item);
+      }
+    })
+  );
+}
+
+async function process(block, item) {
+  const command = concatenateText(item.paragraph.text);
+  if (command.startsWith("set text to ")) {
+    await notion.blocks.update({
+      block_id: block.id,
+      [block.type]: {
+        text: [
+          {
+            type: "text",
+            text: {
+              content: command.slice("set text to ".length),
+            },
+          },
+        ],
+      },
+    });
+  }
+}
+
 // findSpanAll(
 //   [1, 2, 4, 5, 6, 8, 9, 11],
 //   [(v) => v % 2 === 0, (v) => v % 2 === 1]
@@ -63,5 +97,5 @@ function findSpanAll(arr, predicates) {
 
 (async () => {
   await getAllMailboxes(NOTION_PAGE);
-  console.log(mailboxes);
+  await processAllMailboxes();
 })();
