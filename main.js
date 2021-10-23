@@ -44,7 +44,7 @@ async function getAllChildren(parentId) {
 }
 
 async function processAllMailboxes() {
-  await Promise.all(
+  const remaining = await Promise.all(
     mailboxes.map(async ([block, inbox, outbox]) => {
       const inboxItems = await getAllChildren(inbox.id);
       if (inboxItems.length) {
@@ -53,9 +53,14 @@ async function processAllMailboxes() {
           block_id: item.id,
         });
         await processItem(block, item);
+        return inboxItems.length - 1;
+      } else {
+        return 0;
       }
     })
   );
+
+  return remaining.some((count) => count > 0);
 }
 
 async function processItem(block, item) {
@@ -111,23 +116,14 @@ function findSpanAll(arr, predicates) {
 }
 
 (async () => {
-  async function processAllOnce() {
-    mailboxes = [];
-    await getAllMailboxes(process.env.NOTION_PAGE);
-    await processAllMailboxes();
-  }
-
-  function mailRemaining() {
-    return mailboxes.some(([block, inbox, outbox]) => inbox.has_children);
-  }
-
   async function loop() {
-    await processAllOnce();
-    if (mailRemaining()) {
+    const mailRemaining = await processAllMailboxes();
+    if (mailRemaining) {
       await loop();
     }
   }
 
+  await getAllMailboxes(process.env.NOTION_PAGE);
   await loop();
   console.log("All done!");
 })();
