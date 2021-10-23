@@ -115,7 +115,7 @@ function findSpanAll(arr, predicates) {
   return res;
 }
 
-(async () => {
+async function run() {
   async function loop() {
     const mailRemaining = await processAllMailboxes();
     if (mailRemaining) {
@@ -125,5 +125,13 @@ function findSpanAll(arr, predicates) {
 
   await getAllMailboxes(process.env.NOTION_PAGE);
   await loop();
-  console.log("All done!");
-})();
+}
+
+if (require.main === module) {
+  (async () => {
+    await run();
+    console.log("All done!");
+  })();
+} else {
+  module.exports = run;
+}

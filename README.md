@@ -19,3 +19,10 @@ npm i
 NOTION_SECRET=[your token here] NOTION_PAGE_ID=[your id here] node main.js
 # watch it do its thing
 ```
+
+### frontend
+
+A small frontend exists so you can place a "Process" button in an embed block
+and click it.
+
+Run it locally with `NOTION_SECRET=... NOTION_PAGE=... vercel dev`.
