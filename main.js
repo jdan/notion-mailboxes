@@ -1,17 +1,14 @@
 const { Client } = require("@notionhq/client");
 
-const NOTION_SECRET = "secret_6N8i14byoy5Q9luOdvYkA1p0Lf1JtfBGXhidGl8TWGQ";
-const NOTION_PAGE = "71fb14f581a244a2a16de7a2a8018be5";
-
 const notion = new Client({
-  auth: NOTION_SECRET,
+  auth: process.env.NOTION_SECRET,
 });
 
 function concatenateText(arr) {
   return arr.map((i) => i.text.content).join("");
 }
 
-const mailboxes = [];
+let mailboxes = [];
 async function getAllMailboxes(parentId) {
   const blocks = await getAllChildren(parentId);
 
@@ -55,13 +52,13 @@ async function processAllMailboxes() {
         await notion.blocks.delete({
           block_id: item.id,
         });
-        await process(block, item);
+        await processItem(block, item);
       }
     })
   );
 }
 
-async function process(block, item) {
+async function processItem(block, item) {
   const command = concatenateText(item.paragraph.text);
   if (command.startsWith("set text to ")) {
     await notion.blocks.update({
@@ -73,8 +70,26 @@ async function process(block, item) {
             text: {
               content: command.slice("set text to ".length),
             },
+            annotations: block[block.type].text[0]
+              ? block[block.type].text[0].annotations
+              : [],
           },
         ],
+      },
+    });
+  }
+
+  if (command.startsWith("set color to")) {
+    await notion.blocks.update({
+      block_id: block.id,
+      [block.type]: {
+        text: block[block.type].text.map((text) => ({
+          ...text,
+          annotations: {
+            ...text.annotations,
+            color: command.slice("set color to ".length),
+          },
+        })),
       },
     });
   }
@@ -96,6 +111,23 @@ function findSpanAll(arr, predicates) {
 }
 
 (async () => {
-  await getAllMailboxes(NOTION_PAGE);
-  await processAllMailboxes();
+  async function processAllOnce() {
+    mailboxes = [];
+    await getAllMailboxes(process.env.NOTION_PAGE);
+    await processAllMailboxes();
+  }
+
+  function mailRemaining() {
+    return mailboxes.some(([block, inbox, outbox]) => inbox.has_children);
+  }
+
+  async function loop() {
+    await processAllOnce();
+    if (mailRemaining()) {
+      await loop();
+    }
+  }
+
+  await loop();
+  console.log("All done!");
 })();
