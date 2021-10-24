@@ -117,13 +117,15 @@ function findSpanAll(arr, predicates) {
 
 async function run() {
   async function loop() {
+    // mailboxes get stale - a lot of API calls though
+    mailboxes = [];
+    await getAllMailboxes(process.env.NOTION_PAGE);
     const mailRemaining = await processAllMailboxes();
     if (mailRemaining) {
       await loop();
     }
   }
 
-  await getAllMailboxes(process.env.NOTION_PAGE);
   await loop();
 }
 
